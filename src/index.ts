@@ -1,38 +1,53 @@
-import { Game } from './game/game';
-import { Background as Background } from './game/background';
-import { Critter } from './game/critter';
-const game = new Game({height: 800 , width: 800});
+import { Game } from "./game/game";
+import { Background as Background } from "./game/background";
+import { Critter } from "./game/critter";
+import { Avatar } from "./game/avatar";
+import { Corpse } from "./game/corpse";
+const game = new Game({ height: 800, width: 1600 });
 // set up the screen
-const screen = new Background({
-  center: { x: 0, y: 0 },
-  height: 640,
-  width: 800
-})
 
-game.addEntity(screen);
+game.addEntity(
+  new Background({
+    position: [0, 0],
+  })
+);
 
+game.addEntity(
+  new Critter({
+    position: [400, 400],
+    color: "red",
+    angle: 0,
+  })
+);
 
-game.addEntity(new Critter({
-  center: {
-    x: 100, y: 320
-  },
-  color: 'red', angle: 0
-}));
+game.addEntity(
+  new Critter({
+    position: [400, 400],
+    color: "red",
+    angle: 90,
+  })
+);
+game.addEntity(
+  new Critter({
+    position: [400, 400],
+    color: "red",
+    angle: 180,
+  })
+);
+game.addEntity(
+  new Critter({
+    position: [400, 400],
+    color: "red",
+    angle: 270,
+  })
+);
 
-game.addEntity(new Critter({
-  center: {
-    x: 200, y: 320
-  },  color: 'red', angle: 45
-}));
-game.addEntity(new Critter({
-  center: {
-    x: 300, y: 320
-  },  color: 'red', angle: 90
-}));
-game.addEntity(new Critter({
-  center: {
-    x: 400, y: 320
-  }, color: 'red', angle: 180
-}));
+game.addEntity(
+  new Corpse({
+    position: [100, 400],
+    color: "red",
+    angle: 270,
+  })
+);
 
-game.entities.forEach(e => {})
+game.addEntity(new Avatar({ position: [400, 400] }));

@@ -1,15 +1,11 @@
 import { Entity, EntityOptions } from "./entity";
 
 export abstract class CritterLike extends Entity {
-
-
   _radius = 2;
-  
+
   constructor(public options: EntityOptions) {
     super(options);
   }
-  
-  
 
   set radius(num: number) {
     this._radius = num;

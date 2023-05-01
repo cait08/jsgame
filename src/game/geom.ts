@@ -1,82 +1,46 @@
-export class Geom {
+import { GameMath } from "./numbers";
+import { Position } from "./types/types";
 
-  constructor(private ctx: CanvasRenderingContext2D) { }
+export class Geom {
+  constructor() {}
 
   /**
    * Convert degrees to radians
-   * @param degs 
-   * @returns 
+   * @param degs
+   * @returns
    */
   static degToRads(degs: number): number {
     var pi = Math.PI;
     return degs * (pi / 180);
   }
 
-  static posFromPos(start: [number, number], angle: number, distance: number): [number, number] {
+  static posFromPos(
+    start: Position,
+    angle: number,
+    distance: number
+  ): Position {
     const [dx, dy] = Geom.resultCoords(angle, distance);
     const [x, y] = start;
     return [x + dx, y + dy];
   }
 
-  static resultCoords(angle: number, dist: number): [number, number] {
-    if (angle < 0) {
-      angle = 360 - angle;
-    }
-    if (angle > 360) {
-      angle = angle - 360;
-    }
+  static resultCoords(angle: number, dist: number): Position {
+    angle = GameMath.coerceDegrees(angle);
 
     angle = this.degToRads(angle);
 
     const dx = dist * Math.cos(angle);
     const dy = dist * Math.sin(angle);
 
-    return [dx, dy]
+    return [dx, dy];
   }
 
-  circle(center: [number, number] = [0, 0], radius: number = 10, color = 'white', strokeColor = 'black') {
-
-    const [x, y] = center;
-    this.ctx.fillStyle = color;
-    this.ctx.strokeStyle = strokeColor;
-    this.ctx.beginPath();
-
-
-    this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-
-    this.ctx.fill();
-    this.ctx.lineWidth = radius / 10;
-    this.ctx.stroke();
+  static coordsFrom(pos: Position, angle: number, distance: number): Position {
+    const [dx, dy] = Geom.resultCoords(angle, distance);
+    return [pos[0] + dx, pos[1] + dy];
   }
 
-  line(start: [number, number], end: [number, number], color: string, width = 1) {
-    const [x, y] = start;
-    const [dx, dy] = end;
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = color;
-    this.ctx.lineWidth = 3;
-    this.ctx.moveTo(x, y);
-
-    this.ctx.lineTo(dx, dy);
-    this.ctx.lineWidth = width;
-    this.ctx.stroke();
-  }
-
-  text(position: [number, number], text: string, color = 'black') {
-
-    this.ctx.strokeStyle = color;
-    this.ctx.strokeText(text, ...position);
-  }
-
-  random(min: number, max: number): number {
-    const diff = Math.abs(max - min);
-    const rand = Math.random();
-    const int = rand * diff;
-    return min + int;
-  }
-
-
-  distance(point1: [number, number], point2: [number, number]): number {
+  static distance(point1: Position, point2: Position): number {
     let [x, y] = point1;
     let [x2, y2] = point2;
 
@@ -95,7 +59,7 @@ export class Geom {
     return Math.sqrt(a * a + b * b);
   }
 
-  angle(point1: [number, number], point2: [number, number]) {
+  angle(point1: Position, point2: Position) {
     let [x, y] = point1;
     let [x2, y2] = point2;
 
@@ -115,8 +79,6 @@ export class Geom {
     theta *= 180 / Math.PI; // rads to degs, range (-180, 180]
     if (theta < 0) theta = 360 + theta; // range [0, 360)
 
-
-    return theta;
+    return GameMath.coerceDegrees(theta);
   }
-
 }

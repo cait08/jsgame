@@ -1,24 +1,29 @@
 import { Observable, Subject } from "rxjs";
 import { Game } from "./game";
 import { Geom } from "./geom";
+import { Drawing } from "./drawing";
+import { Position } from "./types/types";
+import { GameMath } from "./numbers";
 
 export interface EntityOptions {
-
-  center: {
-    x: number; y: number;
-  }
-
+  position: Position;
+  angle?: number;
 }
 
 export abstract class Entity {
   game: Game;
   geom: Geom;
+  drawing: Drawing;
 
   x: number = 0;
   y: number = 0;
   z: number = 0;
 
-  health: number = 1000;
+  dx: number = 0;
+  dy: number = 0;
+  d: number = 0;
+
+  health: number = 100;
 
   onDestroy = new Subject<void>();
 
@@ -26,26 +31,26 @@ export abstract class Entity {
 
   tick: Subject<void>;
 
+  team: number;
+
   constructor(options?: EntityOptions) {
     if (options) {
-      this.x = options.center.x;
-      this.y = options.center.y;
+      this.x = options.position[0] || 0;
+      this.y = options.position[1] || 0;
     }
+    this.angle = options?.angle || 0;
   }
 
   _angle = 0;
   set angle(num: number) {
-    this._angle = num;
-    if (this._angle < 0) {
-      this._angle = 0;
-    }
+    this._angle = GameMath.coerceDegrees(num);
   }
 
   get angle() {
     return this._angle;
   }
 
-  get position(): [number, number] {
+  get position(): Position {
     return [this.x, this.y];
   }
 
@@ -55,15 +60,14 @@ export abstract class Entity {
     this.game.removeEntity(this);
   }
 
-  randomNumber(min: number, max: number) {
-    const rand = Math.random() - 0.5;
-    const diff = Math.abs(min - max);
-    return rand * diff;
+  faceAngle(point: Position): this {
+    this.angle = this.geom.angle([this.x, this.y], point);
+    return this;
   }
 
-  faceAngle(point: [number, number]): this {
-    this.angle = (this.geom.angle([this.x, this.y], point));
-    return this;
+  faceItem(item: Entity) {
+    const pos = item.position;
+    this.angle = this.geom.angle(this.position, pos);
   }
 
   moveForward(dist: number): this {
@@ -73,9 +77,9 @@ export abstract class Entity {
     return this;
   }
 
+  abstract onCollide<T>(collider: Entity): void;
 
-
-  abstract draw(): void
+  abstract draw(): void;
 
   think() {
     if (this.x < 0) {
@@ -97,6 +101,5 @@ export abstract class Entity {
       this.y = this.game.canvas.height - 1;
       this.angle = 270;
     }
-
   }
 }
