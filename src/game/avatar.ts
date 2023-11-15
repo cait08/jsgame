@@ -66,11 +66,14 @@ export class Avatar extends Entity {
   think() {
     super.think();
 
+    // Add one stamina per cycle
     this.stamina++;
 
     const corpses = this.game.entities.filter(
       (e) => e.constructor.name === "Corpse"
     );
+
+    // Find overlapping corpses
     const corpse = corpses.find(
       (c) => Geom.distance(c.position, this.position) < this.radius
     ) as Corpse;
@@ -80,6 +83,7 @@ export class Avatar extends Entity {
       this.exp = this.exp + corpse.radius;
     }
 
+    // Don't poll input if there's no game pads
     if (!this.game.input.gamepads[0]) {
       return;
     }
@@ -106,15 +110,13 @@ export class Avatar extends Entity {
 
     if (x && y) {
       this.moveForward(-y * 8);
+      this.moveSideways(x * 8);
     }
 
+    // Poll input
     const buttons = this.game.input.gamepad.buttons;
 
     const pressed = buttons.filter((b) => b.pressed);
-
-    if (pressed.length) {
-      //    console.log(pressed.map((p) => buttons.indexOf(p)));
-    }
 
     const spell = pressed.find((b) => buttons.indexOf(b) === 4);
     const spellHard = pressed.find((b) => buttons.indexOf(b) === 6);
@@ -162,6 +164,15 @@ export class Avatar extends Entity {
   }
 
   spell(size: number) {
+    const spell = new FlameSpell(this);
+
+    spell.cast(size);
+    if (this.stamina <= 30) {
+      return;
+    }
+  }
+
+  spell2(size: number) {
     const spell = new FlameSpell(this);
 
     spell.cast(size);

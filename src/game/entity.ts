@@ -77,6 +77,13 @@ export abstract class Entity {
     return this;
   }
 
+  moveSideways(dist: number): this {
+    const [dx, dy] = Geom.resultCoords(this.angle + 90, dist);
+    this.x = parseFloat((this.x + dx).toFixed());
+    this.y = parseFloat((this.y + dy).toFixed());
+    return this;
+  }
+
   abstract onCollide<T>(collider: Entity): void;
 
   abstract draw(): void;

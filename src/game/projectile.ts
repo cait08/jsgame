@@ -1,3 +1,4 @@
+import { Subject } from "rxjs";
 import { Dice } from "./dice";
 import { Drawing } from "./drawing";
 import { Entity, EntityOptions } from "./entity";
@@ -5,10 +6,15 @@ import { Geom } from "./geom";
 import { GameMath } from "./numbers";
 import { Position } from "./types/types";
 
+export interface ProjectileOptions extends EntityOptions {
+  velocity: number;
+}
+
 export class Projectile extends Entity {
-  constructor(options: EntityOptions) {
+  constructor(options: ProjectileOptions) {
     super(options);
     this.z = 50;
+    this.velocity = options.velocity ?? 1;
 
     Dice.roll(50, () => {
       this.color = "red";
@@ -20,6 +26,8 @@ export class Projectile extends Entity {
       this.color = "black";
     });
   }
+
+  velocity = 0;
 
   created = new Date().getTime();
 
@@ -33,15 +41,8 @@ export class Projectile extends Entity {
     this._radius = Math.abs(num);
   }
 
-  color = "orange";
-
-  colors = {
-    orange: "orange",
-    red: "red",
-    grey: "grey",
-    black: "black",
-    purple: "purple",
-  };
+  colors = ["orange", "grey", "limegreen", "violet"];
+  color = this.colors[0];
 
   draw() {
     const pt = this.position;
@@ -60,6 +61,7 @@ export class Projectile extends Entity {
   }
 
   think() {
+    this.velocity = Math.abs(this.velocity - 0.001);
     const now = new Date().getTime();
 
     if (this.created + 200 < now) {
@@ -67,43 +69,44 @@ export class Projectile extends Entity {
       this.angle = this.angle + da;
     }
 
-    switch (this.color) {
-      case this.colors.orange:
-        if (this.created + 1000 < now) {
-          this.color = "grey";
-        }
+    const colorIdx = this.colors.indexOf(this.color);
+
+    const incrementOnAge = (age: number) => {
+      if (this.created + age < now) {
+        this.color = this.colors[colorIdx + 1] ?? this.colors[0];
+      }
+    };
+
+    switch (colorIdx) {
+      case 0:
+        incrementOnAge(100);
         break;
-      case this.colors.red:
-        if (this.created + 200 < now) {
-          this.color = "orange";
-        }
+      case 1:
+        incrementOnAge(200);
         break;
-      case this.colors.grey:
+      case 2:
         this.radius = this.radius + 0.2;
-        if (this.created + 1200 < now) {
-          Dice.roll(5, () => {
-            this.color = "black";
-          });
-          Dice.roll(1, () => {
-            this.color = "violet";
-          });
-        }
+        incrementOnAge(400);
         break;
-      case this.colors.black:
+      case 3:
+        incrementOnAge(800);
         this.radius--;
         break;
 
       default:
+        // Get bigger AND fade away
         let offs = now - this.created;
 
-        this.radius = this.radius + 0.2;
+        this.radius = this.radius + 0.4;
 
         this.color = `rgba(75, 0, 130, ${(1 / offs) * 100})`;
 
         break;
     }
 
-    this.moveForward(GameMath.random(3, 8));
+    const movementSpread = 2;
+
+    this.moveForward(GameMath.random(0, this.velocity));
 
     if (this.created + 100 < now) {
       this.radius = this.radius - 0.1;
@@ -126,4 +129,6 @@ export class Projectile extends Entity {
       near.health = near.health - 100;
     }
   }
+
+  onCollide<T>(collider: Entity): void {}
 }

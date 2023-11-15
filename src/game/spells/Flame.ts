@@ -10,7 +10,7 @@ export class FlameSpell extends BaseSpell<Avatar> {
       return;
     }
 
-    if (this.caster.stamina <= 30) {
+    if (this.caster.stamina <= size) {
       // return;
     }
 
@@ -34,6 +34,7 @@ export class FlameSpell extends BaseSpell<Avatar> {
       );
 
       const projectile = new Projectile({
+        velocity: 15,
         position: Geom.coordsFrom(
           origin,
           this.caster.angle - 90,

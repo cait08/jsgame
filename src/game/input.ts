@@ -4,8 +4,9 @@ export class Input {
   gamepads: Gamepad[] = [];
 
   constructor() {
-    window.addEventListener("gamepadconnected", (e) => {
-      this.registerGamepad(e.gamepad);
+    window.addEventListener("gamepadconnected", (evt) => {
+      console.log(evt);
+      this.registerGamepad(evt.gamepad);
     });
 
     window.addEventListener("gamepaddisconnected", (e) => {
@@ -21,6 +22,9 @@ export class Input {
   }
 
   registerGamepad(g: Gamepad) {
+    if (!g) {
+      throw new Error("Undefined gamepad");
+    }
     this.gamepads.push(g);
 
     console.info(
