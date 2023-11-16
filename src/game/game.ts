@@ -17,7 +17,10 @@ export class Game {
     1000
   );
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    powerPreference: "high-performance",
+  });
 
   drawing: Drawing;
 
@@ -40,10 +43,10 @@ export class Game {
     this.renderer.shadowMap.enabled = true;
     document.body.append(this.renderer.domElement);
 
-    const al = new THREE.AmbientLight(0xffffff, 0.1);
+    const al = new THREE.AmbientLight(0xffffff, 10);
 
     this.scene.add(al);
-    this.scene.fog = new THREE.Fog(0xcccccc, 1, 15);
+    this.scene.fog = new THREE.Fog(0xcccccc, 1, 100);
 
     // Shapes below
 
@@ -54,30 +57,51 @@ export class Game {
     ground.position.y = -2;
     this.scene.add(ground);
 
-    const cube = this.cube(undefined, { roughness: 100, reflectivity: 0 });
+    const cube = this.cube(undefined, {
+      color: 0x0,
+      roughness: 1,
+      reflectivity: 1,
+    });
     this.scene.add(cube);
+
+    const cube2 = this.cube(undefined, {
+      color: 0xddd,
+      roughness: 1,
+      reflectivity: 1,
+    });
+    this.scene.add(cube2);
 
     const dl = new THREE.DirectionalLight(0x0000ff, 1);
     dl.castShadow = true;
     dl.position.set(0, 100, 0);
     this.scene.add(dl);
 
-    const sl1 = this.spotlight([1, 3, 0], 0xff0000);
-    const sl2 = this.spotlight([-1, 3, 0], 0x00ff00);
-    const sl3 = this.spotlight([0, 3, 0], 0x0000ff);
+    const red = this.spotlight([3, 3, 0], 0xff0000);
+    const green = this.spotlight([0, 3, 0], 0x00ff00);
+    const blue = this.spotlight([-3, 3, 0], 0x0000ff);
 
-    (sl1 as any).shadowCameraNear = 1;
-    this.scene.add(...sl1, ...sl2, ...sl3);
+    (red as any).shadowCameraNear = 1;
+    this.scene.add(...red, ...green, ...blue);
 
     cube.position.set(0, 0, 0);
     cube.castShadow = true;
+    cube2.castShadow = true;
     ground.receiveShadow = true;
 
     // Rotate the cube
-    setInterval(() => {
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-    }, 10);
+
+    const rotate = () => {
+      setTimeout(() => {
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+
+        cube2.rotation.x += +0.01;
+        cube2.rotation.y += -0.011;
+        rotate();
+      });
+    };
+
+    rotate();
 
     this.camera.position.z = 5;
 
@@ -89,7 +113,7 @@ export class Game {
     position: [number, number, number],
     color: THREE.ColorRepresentation = 0xff0000
   ) {
-    const sl1 = new THREE.SpotLight(color, 100, 8, Math.PI / 8, 0.2);
+    const sl1 = new THREE.SpotLight(color, 1000, 8, Math.PI / 8, 0);
     sl1.castShadow = true;
     const slHelper = new THREE.SpotLightHelper(sl1);
     sl1.position.set(...position);
@@ -114,7 +138,6 @@ export class Game {
     const material = new THREE.MeshPhysicalMaterial({
       color: 0x0095dd,
       roughness: 0,
-
       ...mat,
     });
     const cube = new THREE.Mesh(geometry, material);
