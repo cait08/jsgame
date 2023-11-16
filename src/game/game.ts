@@ -5,7 +5,20 @@ import { Drawing } from "./drawing";
 import { Input } from "./input";
 import { Physics } from "./physics";
 
+import * as THREE from "three";
+import { Light } from "./lights/light";
+
 export class Game {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    1,
+    1000
+  );
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+
   drawing: Drawing;
 
   tick = new Subject<void>();
@@ -21,16 +34,104 @@ export class Game {
   input = new Input();
 
   constructor(params: { height: number; width: number }) {
-    const div = document.createElement("div");
+    this.camera.position.z = 100;
 
-    const screen = document.createElement("canvas");
-    screen.height = params.height;
-    screen.width = params.width;
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.shadowMap.enabled = true;
+    document.body.append(this.renderer.domElement);
 
-    const ctx = screen.getContext("2d");
-    if (!ctx) {
-      return;
-    }
+    const al = new THREE.AmbientLight(0xffffff, 0.1);
+
+    this.scene.add(al);
+    this.scene.fog = new THREE.Fog(0xcccccc, 1, 15);
+
+    // Shapes below
+
+    const ground = this.cube([100, 1, 100], {
+      color: 0x222222,
+      reflectivity: 0.5,
+    });
+    ground.position.y = -2;
+    this.scene.add(ground);
+
+    const cube = this.cube(undefined, { roughness: 100, reflectivity: 0 });
+    this.scene.add(cube);
+
+    const dl = new THREE.DirectionalLight(0x0000ff, 1);
+    dl.castShadow = true;
+    dl.position.set(0, 100, 0);
+    this.scene.add(dl);
+
+    const sl1 = this.spotlight([1, 3, 0], 0xff0000);
+    const sl2 = this.spotlight([-1, 3, 0], 0x00ff00);
+    const sl3 = this.spotlight([0, 3, 0], 0x0000ff);
+
+    (sl1 as any).shadowCameraNear = 1;
+    this.scene.add(...sl1, ...sl2, ...sl3);
+
+    cube.position.set(0, 0, 0);
+    cube.castShadow = true;
+    ground.receiveShadow = true;
+
+    // Rotate the cube
+    setInterval(() => {
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
+    }, 10);
+
+    this.camera.position.z = 5;
+
+    this.animate();
+    window.addEventListener("resize", () => this.onWindowResize());
+  }
+
+  spotlight(
+    position: [number, number, number],
+    color: THREE.ColorRepresentation = 0xff0000
+  ) {
+    const sl1 = new THREE.SpotLight(color, 100, 8, Math.PI / 8, 0.2);
+    sl1.castShadow = true;
+    const slHelper = new THREE.SpotLightHelper(sl1);
+    sl1.position.set(...position);
+    return [sl1];
+  }
+
+  light() {
+    const sphere = new THREE.SphereGeometry(0.01, 16, 8);
+    const light1 = new THREE.PointLight(0xffffff, 100);
+    light1.add(
+      new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ color: 0xffffff }))
+    );
+    return light1;
+  }
+
+  cube(
+    geom: [number, number, number] = [1, 1, 1],
+    mat: THREE.MeshPhysicalMaterialParameters = {},
+    position: [number, number, number] = [0, 0, 0]
+  ) {
+    const geometry = new THREE.BoxGeometry(...geom);
+    const material = new THREE.MeshPhysicalMaterial({
+      color: 0x0095dd,
+      roughness: 0,
+
+      ...mat,
+    });
+    const cube = new THREE.Mesh(geometry, material);
+
+    return cube;
+  }
+
+  onWindowResize() {
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  animate() {
+    requestAnimationFrame(() => this.animate());
+    this.renderer.render(this.scene, this.camera);
   }
 
   think() {
